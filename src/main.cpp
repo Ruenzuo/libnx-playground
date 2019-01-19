@@ -1,26 +1,33 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 
+const static uint16_t width = 1920 / 6; // = 320
+const static uint16_t height = 1080 / 6; // = 180
+const static uint16_t contentWidth = 160;
+const static uint16_t contentHeight = 144;
+const static uint16_t contentSpaceX = (width - contentWidth) / 2;
+const static uint16_t contentSpaceY = (height - contentHeight) / 2;
+const static uint16_t contentScale = 6;
+
 using namespace std;
 
 int main() {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
         cout << "SDL init failed with error: " << SDL_GetError() << endl;
         exit(1337);
     }
-    int width = 1280;
-    int height = 720;
-    SDL_Window *window = SDL_CreateWindow("nana", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
+    SDL_Window *window = SDL_CreateWindow("nana", 0, 0, width * contentScale, height * contentScale, 0);
     if (window == nullptr) {
         cout << "SDL create window failed with error: " << SDL_GetError() << endl;
         exit(1337);
     }
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (renderer == nullptr) {
         cout << "SDL create renderer failed with error: " << SDL_GetError() << endl;
         exit(1337);
     }
-    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    SDL_RenderSetScale(renderer, contentScale, contentScale);
+    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
     uint32_t format;
     SDL_QueryTexture(texture, &format, nullptr, nullptr, nullptr);
     while (true) {
@@ -30,8 +37,8 @@ int main() {
             cout << "SDL lock texture failed with error: " << SDL_GetError() << endl;
             exit(1337);
         }
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
+        for (int x = contentSpaceX; x < width - contentSpaceX; x++) {
+            for (int y = contentSpaceY; y < height - contentSpaceY; y++) {
                 int32_t pixelPosition = y * (pitch / sizeof(unsigned int)) + x;
                 uint8_t r = 0xFF;
                 uint8_t g = 0xFF;
